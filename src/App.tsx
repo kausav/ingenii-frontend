@@ -43,6 +43,11 @@ function pageFromHash(): Page {
 function App() {
   const [page, setPage] = useState<Page>(pageFromHash);
   const [prompt, setPrompt] = useState("");
+  // Figma: the landing/Home screen is shown with the sidebar expanded;
+  // dashboard/module screens start collapsed. The user can toggle either state.
+  const [sidebarExpanded, setSidebarExpanded] = useState(
+    () => pageFromHash() === "home"
+  );
 
   useEffect(() => {
     const onHashChange = () => setPage(pageFromHash());
@@ -77,12 +82,17 @@ function App() {
     <div className="min-h-screen bg-[#f7f7f6]">
       <Sidebar
         active={activeSidebarItem}
-        expanded={false}
+        expanded={sidebarExpanded}
+        onToggle={() => setSidebarExpanded((expanded) => !expanded)}
         onNavigate={navigate}
       />
 
-      <div className="min-h-screen ml-[94px]">
-        <Header showLogo />
+      <div
+        className={`relative min-h-screen transition-[margin-left] duration-200 ${
+          sidebarExpanded ? "ml-[236px]" : "ml-[94px]"
+        }`}
+      >
+        <Header />
 
         {page === "home" && <Home onBuild={buildFromPrompt} onNavigate={navigate} />}
 
