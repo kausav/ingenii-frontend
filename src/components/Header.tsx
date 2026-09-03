@@ -5,7 +5,7 @@ export function Header({ showLogo = false }: { showLogo?: boolean }) {
   return (
     <>
       {showLogo && (
-        <div className="absolute left-6 top-7 z-20">
+        <div className="absolute left-[23px] top-7 z-20">
           <Logo />
         </div>
       )}

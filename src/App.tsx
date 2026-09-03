@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import { Header } from "./components/Header";
 import { Sidebar } from "./components/Sidebar";
 import { Dashboard } from "./pages/Dashboard";
-import { GetStarted } from "./pages/GetStarted";
+import { Home } from "./pages/Home";
 import { ModulePage } from "./pages/ModulePage";
 import { SolutionBuilder } from "./pages/SolutionBuilder";
 import type { ModuleId } from "./types";
 
-type Page = "get-started" | "solution" | "dashboard" | ModuleId;
+type Page = "home" | "get-started" | "solution" | "dashboard" | ModuleId;
 
 const moduleIds: ModuleId[] = [
   "source",
@@ -25,7 +25,9 @@ function isModulePage(page: string): page is ModuleId {
 
 function pageFromHash(): Page {
   const value = window.location.hash.replace("#/", "").replace("#", "");
+
   if (
+    value === "home" ||
     value === "get-started" ||
     value === "solution" ||
     value === "dashboard" ||
@@ -33,7 +35,9 @@ function pageFromHash(): Page {
   ) {
     return value as Page;
   }
-  return "get-started";
+
+  // The app opens on Home. Get Started is a separate sidebar workflow.
+  return "home";
 }
 
 function App() {
@@ -48,6 +52,7 @@ function App() {
 
   const navigate = (next: string) => {
     if (
+      next === "home" ||
       next === "get-started" ||
       next === "solution" ||
       next === "dashboard" ||
@@ -60,32 +65,37 @@ function App() {
 
   const buildFromPrompt = (value: string) => {
     setPrompt(value);
-    navigate("solution");
+    navigate("get-started");
   };
 
-  // Only Get Started uses the wide/expanded navigation shown in Figma.
-  // Dashboard, Solution and module screens use the compact icon rail.
-  const expandedSidebar = page === "get-started";
+  // The Figma Get Started workflow uses the compact icon rail.
+  // Home/Dashboard/module pages also keep the same rail so the content
+  // does not shift when the user changes sidebar sections.
+  const activeSidebarItem = page === "solution" ? "get-started" : page;
 
   return (
     <div className="min-h-screen bg-[#f7f7f6]">
       <Sidebar
-        active={page}
-        expanded={expandedSidebar}
+        active={activeSidebarItem}
+        expanded={false}
         onNavigate={navigate}
       />
 
-      <div
-        className={`min-h-screen ${
-          expandedSidebar ? "ml-[236px]" : "ml-[94px]"
-        }`}
-      >
-        <Header showLogo={!expandedSidebar} />
+      <div className="min-h-screen ml-[94px]">
+        <Header showLogo />
+
+        {page === "home" && <Home onBuild={buildFromPrompt} onNavigate={navigate} />}
 
         {page === "get-started" && (
-          <GetStarted onBuild={buildFromPrompt} onNavigate={navigate} />
+          <SolutionBuilder
+            prompt={prompt}
+            onCreate={() => navigate("dashboard")}
+          />
         )}
 
+        {/* Keep the old solution hash working for links/bookmarks created by
+            earlier versions of the app. It now renders the same Get Started
+            workflow instead of a separate, competing page. */}
         {page === "solution" && (
           <SolutionBuilder
             prompt={prompt}
